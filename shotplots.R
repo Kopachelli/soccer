@@ -125,3 +125,29 @@ create_Pitch() +
   geom_point(data = subset(pogba, type.name == "Ball Receipt*"), 
              aes(x = location.x, y = location.y, color = under_pressure)) +
   guides(color = FALSE)
+
+passes <- events %>%
+  subset(type.name == "Pass")
+
+passes$location.x <- unlist(lapply(passes$location, `[[`,1))
+passes$location.y <- unlist(lapply(passes$location, `[[`,2))
+passes$end.location.x <- unlist(lapply(passes$pass.end_location, `[[`,1))
+passes$end.location.y <- unlist(lapply(passes$pass.end_location, `[[`,2))
+#passes$pass.outcome.name[is.na(passes$pass.outcome.name) == TRUE] <- "Complete"
+passes$pass.outcome.name[passes$pass.outcome.name == "Out"] <- "Incomplete"
+passes$pass.outcome.name[passes$pass.outcome.name == "Pass Offside"] <- "Incomplete"
+#passes <- passes[!(passes$pass.outcome.name == "Unknown"),] 
+table(passes$pass.outcome.name)
+
+library(ggthemes)
+p <- create_Pitch() +
+  geom_segment(data = subset(passes, player.name == "Paul Pogba"), aes(x = location.x, y = location.y, 
+                                  xend = end.location.x, yend = end.location.y, color = pass.outcome.name), 
+               arrow = arrow(length = unit(.3, "cm"))) +
+  geom_point(data = subset(passes, player.name == "Paul Pogba"), 
+             aes(x = location.x, y = location.y, color = under_pressure)) +
+  guides(color = FALSE)
+p
+
+pogba_passes <- events %>%
+  subset(type.name == "Pass" & player.name == "Paul Pogba")
