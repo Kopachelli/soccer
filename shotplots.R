@@ -133,11 +133,16 @@ passes$location.x <- unlist(lapply(passes$location, `[[`,1))
 passes$location.y <- unlist(lapply(passes$location, `[[`,2))
 passes$end.location.x <- unlist(lapply(passes$pass.end_location, `[[`,1))
 passes$end.location.y <- unlist(lapply(passes$pass.end_location, `[[`,2))
-#passes$pass.outcome.name[is.na(passes$pass.outcome.name) == TRUE] <- "Complete"
+passes$pass.outcome.name[is.na(passes$pass.outcome.name) == TRUE] <- "Complete"
 passes$pass.outcome.name[passes$pass.outcome.name == "Out"] <- "Incomplete"
 passes$pass.outcome.name[passes$pass.outcome.name == "Pass Offside"] <- "Incomplete"
-#passes <- passes[!(passes$pass.outcome.name == "Unknown"),] 
+passes <- passes[!(passes$pass.outcome.name == "Unknown"),] 
 table(passes$pass.outcome.name)
+passes$pass.outcome.name <- factor(passes$pass.outcome.name, levels = c("Complete", "Incomplete"))
+passes$under_pressure[is.na(passes$under_pressure) == TRUE] <- FALSE
+passes$under_pressure <- factor(passes$under_pressure, levels = c(TRUE, FALSE), labels = c("Pressure", "No Pressure"))
+table(passes$under_pressure)
+
 
 library(ggthemes)
 p <- create_Pitch() +
@@ -146,7 +151,8 @@ p <- create_Pitch() +
                arrow = arrow(length = unit(.3, "cm"))) +
   geom_point(data = subset(passes, player.name == "Paul Pogba"), 
              aes(x = location.x, y = location.y, color = under_pressure)) +
-  guides(color = FALSE)
+  guides(color = FALSE) +
+  scale_color_manual(values = c("#0179ba", "#a0060e", "gray", "#a0060e"))
 p
 
 pogba_passes <- events %>%

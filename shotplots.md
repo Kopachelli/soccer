@@ -50,7 +50,7 @@ create_Pitch() +
 
 ![](shotplots_files/figure-markdown_github/unnamed-chunk-1-3.png)
 
-This next plot has caused me some trouble. It maps Paul Pogba's passes, in the same game, and assigns color of the arrow based on pass completion and color of the dot based on whether he was under pressure at the time of the pass. My main problem is that the colors are not as I'd prefer (red is incomplete, gray is complete, blue is unknown; green is under pressure). I've commented out some transformations that were doing more harm than good. I'm also assuming NA is complete.
+This next plot maps Paul Pogba's passes, in the same game, and assigns color of the arrow based on pass completion and color of the dot based on whether he was under pressure at the time of the pass. Red dots are under pressure, red passes are incomplete.
 
 ``` r
 passes <- events %>%
@@ -60,26 +60,37 @@ passes$location.x <- unlist(lapply(passes$location, `[[`,1))
 passes$location.y <- unlist(lapply(passes$location, `[[`,2))
 passes$end.location.x <- unlist(lapply(passes$pass.end_location, `[[`,1))
 passes$end.location.y <- unlist(lapply(passes$pass.end_location, `[[`,2))
-#passes$pass.outcome.name[is.na(passes$pass.outcome.name) == TRUE] <- "Complete"
+passes$pass.outcome.name[is.na(passes$pass.outcome.name) == TRUE] <- "Complete"
 passes$pass.outcome.name[passes$pass.outcome.name == "Out"] <- "Incomplete"
 passes$pass.outcome.name[passes$pass.outcome.name == "Pass Offside"] <- "Incomplete"
-#passes <- passes[!(passes$pass.outcome.name == "Unknown"),] 
+passes <- passes[!(passes$pass.outcome.name == "Unknown"),] 
 table(passes$pass.outcome.name)
 ```
 
     ## 
-    ## Incomplete    Unknown 
-    ##        145          9
+    ##   Complete Incomplete 
+    ##        731        145
 
 ``` r
-library(ggthemes)
+passes$pass.outcome.name <- factor(passes$pass.outcome.name, levels = c("Complete", "Incomplete"))
+passes$under_pressure[is.na(passes$under_pressure) == TRUE] <- FALSE
+passes$under_pressure <- factor(passes$under_pressure, levels = c(TRUE, FALSE), labels = c("Pressure", "No Pressure"))
+table(passes$under_pressure)
+```
+
+    ## 
+    ##    Pressure No Pressure 
+    ##         122         754
+
+``` r
 p <- create_Pitch() +
   geom_segment(data = subset(passes, player.name == "Paul Pogba"), aes(x = location.x, y = location.y, 
                                   xend = end.location.x, yend = end.location.y, color = pass.outcome.name), 
                arrow = arrow(length = unit(.3, "cm"))) +
   geom_point(data = subset(passes, player.name == "Paul Pogba"), 
              aes(x = location.x, y = location.y, color = under_pressure)) +
-  guides(color = FALSE)
+  guides(color = FALSE) +
+  scale_color_manual(values = c("#0179ba", "#a0060e", "gray", "#a0060e"))
 p
 ```
 
